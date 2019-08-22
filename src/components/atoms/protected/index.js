@@ -1,5 +1,5 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+import { PropTypes } from 'prop-types'
 import { withRouter } from 'react-router-dom'
 import { observer } from 'mobx-react'
 import store from 'store'
@@ -9,12 +9,8 @@ import store from 'store'
 class ProtectedComponent extends React.Component {
   logged = false
 
-  expired = true
-
-  async componentWillMount() {
-    const { auth } = store
-    const result = await auth.refresh()
-    auth.auth = result.status === 200
+  componentWillMount() {
+    store.auth.refresh()
   }
 
   componentWillUnmount() {
@@ -22,43 +18,34 @@ class ProtectedComponent extends React.Component {
     clearInterval(this.interval)
   }
 
-  refresh = async () => {
-    const { auth, error } = store
-    const result = await auth.refresh()
-    if (2 * auth.accessExpire > auth.refreshExpire) {
-      error.message = (
-        <div>
-          Refresh token is soon to expire! Please go to
-          &nbsp;
-          <a href="/login">login page</a>.
-        </div>
-      )
-      error.open = true
-    }
-    auth.auth = result.status === 200
-  }
-
   render() {
-    const { auth, me } = store
-    if (auth.auth) {
+    const { auth, error } = store
+    if (auth.status === 200) {
       if (!this.logged) {
         this.logged = true
-        me.fetch()
-        if (auth.accessExpire > 1) {
-          this.interval = setInterval(
-            this.refresh,
-            (auth.accessExpire - 1) * 1000,
-          )
-        }
+        this.interval = setInterval(
+          async () => {
+            await auth.refresh()
+            if (2 * auth.accessExpire > auth.refreshExpire) {
+              error.message = 'Refresh token is soon to expire! Please go to login page.'
+              error.open = true
+            }
+          },
+          (auth.accessExpire - 1) * 1000,
+        )
+        auth.auth = true
       }
-    } else if (this.logged) {
-      this.expired = false
-      clearInterval(this.interval)
-      if (this.props.redirect) {
+    } else if (auth.status >= 400) {
+      if (this.logged) {
+        clearInterval(this.interval)
+        this.logged = false
+        error.message = 'Error refreshing login token! Please login!'
+        error.open = true
         this.props.history.push('/login')
+      } else {
+        this.props.history.push('/landing')
       }
-    } else if (this.props.redirect && auth.auth === false) {
-      this.props.history.push('/landing')
+      auth.auth = false
     }
     return null
   }
@@ -67,12 +54,6 @@ class ProtectedComponent extends React.Component {
 
 ProtectedComponent.propTypes = {
   history: PropTypes.shape({ push: PropTypes.func.isRequired }).isRequired,
-  redirect: PropTypes.bool,
-}
-
-
-ProtectedComponent.defaultProps = {
-  redirect: false,
 }
 
 

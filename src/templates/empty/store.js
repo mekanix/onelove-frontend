@@ -1,11 +1,15 @@
-import { observable } from 'mobx'
+import { decorate, observable } from 'mobx'
 
 
-class ErrorStore {
-  @observable message = ''
+export default decorate(
+  class ErrorStore {
+    message = ''
 
-  @observable open = false
-}
+    open = false
+  },
 
-
-export default ErrorStore
+  {
+    message: observable,
+    open: observable,
+  },
+)

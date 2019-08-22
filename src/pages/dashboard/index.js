@@ -1,26 +1,24 @@
-import React from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { observer } from 'mobx-react'
+import { withTheme } from '@material-ui/core/styles'
 import Template from 'templates/default'
-import ClusterList from 'components/organisms/cluster-list'
-import ProviderList from 'components/organisms/provider-list'
-import ProvisionList from 'components/organisms/provision-list'
-import ServiceList from 'components/organisms/service-list'
 import store from 'store'
-import styles from './styles'
+import getStyles from './styles'
 
 
-export class Dashboard extends React.Component {
+@observer
+class Dashboard extends Component {
   componentWillMount() {
     store.title.title = 'Dashboard'
   }
 
   render() {
+    const styles = getStyles(this.props.theme, 4)
     return (
-      <Template secure>
+      <Template secure={this.props.secure}>
         <div style={styles.root}>
-          <ClusterList />
-          <ProviderList />
-          <ServiceList />
-          <ProvisionList />
+          Dashboard
         </div>
       </Template>
     )
@@ -28,4 +26,15 @@ export class Dashboard extends React.Component {
 }
 
 
-export default Dashboard
+Dashboard.propTypes = {
+  secure: PropTypes.bool,
+  theme: PropTypes.shape().isRequired,
+}
+
+
+Dashboard.defaultProps = {
+  secure: true,
+}
+
+
+export default withTheme(Dashboard)

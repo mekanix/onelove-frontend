@@ -14,34 +14,18 @@ async function login({ email, password }) {
 }
 
 
-async function logout() {
-  const csrf = getCookie('csrf_access_token')
-  const response = await axios.post(
-    `${API_ROOT}/auth/logout`,
-    {},
-    {
-      headers: { 'X-CSRF-TOKEN': csrf },
-    },
-  )
-  return response.data
-}
-
-
 async function refresh() {
   const csrf = getCookie('csrf_refresh_token')
-  const response = await axios.post(
-    `${API_ROOT}/auth/refresh`,
-    {},
-    {
-      headers: { 'X-CSRF-TOKEN': csrf },
+  const response = await axios.post(`${API_ROOT}/auth/refresh`, {}, {
+    headers: {
+      'X-CSRF-TOKEN': csrf,
     },
-  )
+  })
   return response.data
 }
 
 
 export default {
   login,
-  logout,
   refresh,
 }

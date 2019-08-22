@@ -7,19 +7,19 @@ import ProtectedComponent from 'components/atoms/protected'
 import store from 'store'
 
 
-@observer
 class EmptyTemplate extends Component {
   handleClose = () => {
-    const { error } = store
+    const { error } = this.props.store
     error.message = ''
     error.open = false
   }
 
   render() {
-    const { error } = store
+    const Secure = this.props.secure ? <ProtectedComponent /> : <div />
+    const { error } = this.props.store
     return (
       <div style={this.props.style}>
-        <ProtectedComponent redirect={this.props.secure} />
+        {Secure}
         {this.props.children}
         <Snackbar
           autoHideDuration={5000}
@@ -45,7 +45,14 @@ class EmptyTemplate extends Component {
 
 EmptyTemplate.propTypes = {
   children: PropTypes.node,
+  error: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   secure: PropTypes.bool,
+  store: PropTypes.shape({
+    error: PropTypes.shape({
+      message: PropTypes.string.isRequired,
+      open: PropTypes.bool.isRequired,
+    }).isRequired,
+  }).isRequired,
   style: PropTypes.shape({}),
 }
 
@@ -57,4 +64,4 @@ EmptyTemplate.defaultProps = {
 }
 
 
-export default EmptyTemplate
+export default observer((props) => <EmptyTemplate {...props} store={store} />)
